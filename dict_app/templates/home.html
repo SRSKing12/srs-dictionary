@@ -1,0 +1,82 @@
+{% extends 'index.html' %}
+
+{% block title %}Home{% endblock title %}
+
+{% block main-content %}
+<center>
+
+    <form method="post" style="margin-top: 1.5rem;">
+        {% csrf_token %}
+        <input class="srch_ip form-control" name="word" type="text" placeholder="Search your words here">
+
+        <button class="srch" type="submit">🔍</button>
+    </form>
+
+    </center>
+
+    <h2 style="color: rgb(58, 58, 255);">Search Results:</h2>
+    {% if data == None %}
+        <h5>Search for words to see the results here !</h5>
+    {% else %}
+    {% for d in data %}
+        {% if forloop.counter > 1 %}
+            <hr>
+        {% endif %}
+
+        <h3>{{d.word}}</h3>
+        {% if p_link %}
+            <p>Pronunciation: <a style="text-decoration: none;" class="spk-icon" onclick="playAudio(this.id)" id="speaker-icon-{{ forloop.counter }}">🔈</a></p>
+        {% endif %}
+
+        <ul>
+            {% for m in d.meanings %}
+                <li style="font-style: italic;">{{m.partOfSpeech|upper}}</li>
+                <ol>
+                    {% for p in m.definitions %}
+                        <li>{{p.definition}}</li>
+                    {% endfor %}
+                </ol>
+                {% if m.synonyms %}
+                <span style="font-weight: bold; text-decoration: underline; color:green;">Synonyms:</span>
+                    {% for s in m.synonyms %}
+                        <span>{{s}}{% if not forloop.last %}, {% else %}. {% endif %} </span>
+                    {% endfor %}
+                {% endif %}
+                {% if m.antonyms %}
+                <span style="font-weight: bold; text-decoration: underline; color: red;">Antonyms:</span>
+                    {% for a in m.antonyms %}
+                        <span>{{a}}{% if not forloop.last %}, {% else %}. {% endif %} </span>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+    {% if data.title %}
+        <h4 style="color: red;">No search results found!</h4>
+    {% endif %}
+
+    {% endif %}
+
+{% endblock main-content %}
+
+{% block extra-js %}
+const pronounce_link = "{{p_link}}";
+
+        async function playAudio(elt_id) {
+            var e = document.getElementById(elt_id)
+            var audio = new Audio(`${pronounce_link}`);  
+            audio.type = 'audio/mp3';
+            e.innerHTML = "🔊";
+          
+            try {
+              await audio.play();
+            } catch (err) {
+              console.log('Failed to play...' + err);
+            }
+
+            audio.onended = function(){
+                e.innerHTML = "🔈"
+            }
+          }
+{% endblock extra-js %}
